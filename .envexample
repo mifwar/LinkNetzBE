@@ -1,0 +1,10 @@
+DB_USERNAME="your_username"
+DB_PASSWORD="your_password"
+DB_NAME="linksavvy"
+PORT=5432
+JWT_KEY="your_secret_jwt_key"
+AUTH_KEY="your_secret_auth_key"
+GOOGLE_CLIENT_ID="YOUR_GOOGLE_CLIENT_ID"
+GOOGLE_CLIENT_SECRET="YOUR_GOOGLE_CLIENT_SECRET"
+BACKEND_URL="http://IP:PORT"
+FRONTEND_URL="http://IP:PORT"
