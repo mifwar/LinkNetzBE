@@ -50,7 +50,7 @@ func CreateUser(newUser models.NewUser, loginMethod string) error {
 }
 
 func GetByUserID(columnName string, userID float64) string {
-	sqlStatement := fmt.Sprintf("SELECT %s FROM users WHERE user_id = $1", columnName)
+	sqlStatement := fmt.Sprintf("SELECT %s FROM users WHERE id = $1", columnName)
 	result := ""
 
 	err := db.QueryRow(sqlStatement, userID).Scan(&result)
@@ -84,7 +84,7 @@ func GetLoginMethod(email string) string {
 }
 
 func GetUserID(email string) int {
-	result, err := strconv.Atoi(GetByEmail("user_id", email))
+	result, err := strconv.Atoi(GetByEmail("id", email))
 
 	if err != nil {
 		log.Fatalln(err)
