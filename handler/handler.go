@@ -218,9 +218,11 @@ func GoogleCallback(c *fiber.Ctx) error {
 	sessionState := session.Get("state")
 
 	if sessionState != queryState {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "invalid state",
-		})
+		c.Redirect(os.Getenv("FRONTEND_URL"))
+		return nil
+		// return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		// 	"message": "invalid state",
+		// })
 	}
 
 	code := c.Query("code")
