@@ -12,7 +12,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/session"
-	"github.com/golang-jwt/jwt"
 
 	"github.com/google/uuid"
 
@@ -24,10 +23,95 @@ import (
 var Store = &session.Store{}
 
 func init() {
-	fmt.Println("init handler")
 	Store = session.New()
-	Store.RegisterType("string")
-	fmt.Println("ok")
+}
+
+func Tags(c *fiber.Ctx) error {
+	userID := c.Locals("userID")
+	tags := db.GetTags(userID.(float64))
+
+	jsonTags, err := json.Marshal(tags)
+	if err != nil {
+		return err
+	}
+
+	return c.SendString(string(jsonTags))
+}
+
+func Categories(c *fiber.Ctx) error {
+	userID := c.Locals("userID")
+	categories := db.GetCategories(userID.(float64))
+
+	jsonCategories, err := json.Marshal(categories)
+	if err != nil {
+		return err
+	}
+
+	return c.SendString(string(jsonCategories))
+}
+
+func Tag(c *fiber.Ctx) error {
+
+	tag := models.Entity{}
+
+	userID := c.Locals("userID")
+
+	if userID == nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "error at accessing local context",
+		})
+	}
+
+	if err := c.BodyParser(&tag); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"message": "failed to parse",
+		})
+	}
+
+	if err := db.CreateTag(tag, userID.(float64)); err != nil {
+		fmt.Println("err: ", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"message": "failed to insert the tag to DB",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "accepted"},
+	)
+}
+
+func Category(c *fiber.Ctx) error {
+
+	category := models.Entity{}
+
+	userID := c.Locals("userID")
+
+	if userID == nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "error at accessing local context",
+		})
+	}
+
+	if err := c.BodyParser(&category); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"message": "failed to parse",
+		})
+	}
+
+	if err := db.CreateCategory(category, userID.(float64)); err != nil {
+		fmt.Println("err: ", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"message": "failed to insert the category to DB",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "accepted"},
+	)
+}
+
+func Url(c *fiber.Ctx) error {
+	return nil
 }
 
 func Token(c *fiber.Ctx) error {
@@ -52,39 +136,22 @@ func Token(c *fiber.Ctx) error {
 
 func User(c *fiber.Ctx) error {
 
-	authHeader := c.Get("Authorization")
+	userID := c.Locals("userID")
 
-	fmt.Println("authHeader: ", authHeader)
+	userEmail := db.GetByUserID("email", userID.(float64))
+	name := db.GetByUserID("full_name", userID.(float64))
 
-	authKey := strings.Replace(authHeader, "Bearer ", "", -1)
+	tokenString := auth.GenerateJWT(db.GetUserID(userEmail))
 
-	token, err := jwt.Parse(authKey, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-
-		return []byte(os.Getenv("JWT_KEY")), nil
-	})
-
-	if err != nil {
-		fmt.Println("error jwt parse")
-		return Logout(c)
+	cookie := fiber.Cookie{
+		Name:     "jwt",
+		Value:    tokenString,
+		Expires:  time.Now().Add(time.Hour * 24),
+		HTTPOnly: true,
+		SameSite: "none",
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message ": "unauthorized",
-		})
-	}
-
-	if err != nil {
-		fmt.Println("error string to int conversion")
-		log.Fatalln(err)
-	}
-
-	userEmail := db.GetByUserID("email", claims["user"].(float64))
-	name := db.GetByUserID("full_name", claims["user"].(float64))
+	c.Cookie(&cookie)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"email": userEmail,
@@ -97,7 +164,9 @@ func Login(c *fiber.Ctx) error {
 	user := models.User{}
 
 	if err := c.BodyParser(&user); err != nil {
-		return err
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"message": "failed to parse",
+		})
 	}
 
 	if err := auth.ValidateEmail(user.Email); err != nil {
@@ -162,7 +231,9 @@ func Register(c *fiber.Ctx) error {
 	newUser := models.NewUser{}
 
 	if err := c.BodyParser(&newUser); err != nil {
-		return err
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"message": "failed to parse",
+		})
 	}
 
 	newUser.Encrypt()
@@ -192,10 +263,7 @@ func GoogleSignIn(c *fiber.Ctx) error {
 		log.Fatal(err)
 	}
 
-	fmt.Println("state set: ", state)
 	session.Set("state", state)
-	sessionBeforeSave := session.Get("state")
-	fmt.Println("sessionBeforeSave: ", sessionBeforeSave)
 
 	if err := session.Save(); err != nil {
 		log.Fatal(err)

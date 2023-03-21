@@ -37,6 +37,72 @@ func init() {
 	}
 }
 
+func GetTags(userID float64) []models.Entity {
+	sqlStatement := "SELECT name, emoji FROM tags WHERE user_id = $1"
+	rows, err := db.Query(sqlStatement, userID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var tags []models.Entity
+
+	for rows.Next() {
+		var tag models.Entity
+		err := rows.Scan(&tag.Name, &tag.Emoji)
+		if err != nil {
+			log.Fatal(err)
+		}
+		tags = append(tags, tag)
+	}
+
+	return tags
+}
+
+func CreateTag(newTags models.Entity, userID float64) error {
+	sqlStatement := "INSERT INTO tags (name, emoji, user_id) VALUES ($1, $2, $3)"
+	_, err := db.Exec(sqlStatement, newTags.Name, newTags.Emoji, userID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetCategories(userID float64) []models.Entity {
+	sqlStatement := "SELECT name, emoji FROM categories WHERE user_id = $1"
+	rows, err := db.Query(sqlStatement, userID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var categories []models.Entity
+
+	for rows.Next() {
+		var category models.Entity
+		err := rows.Scan(&category.Name, &category.Emoji)
+		if err != nil {
+			log.Fatal(err)
+		}
+		categories = append(categories, category)
+	}
+
+	return categories
+}
+
+func CreateCategory(newCategory models.Entity, userID float64) error {
+	sqlStatement := "INSERT INTO categories (name, emoji, user_id) VALUES ($1, $2, $3)"
+	_, err := db.Exec(sqlStatement, newCategory.Name, newCategory.Emoji, userID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateUser(newUser models.NewUser, loginMethod string) error {
 
 	sqlStatement := "INSERT INTO users (full_name, email, password, login_method) VALUES ($1, $2, $3, $4)"
