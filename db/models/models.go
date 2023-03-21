@@ -17,6 +17,11 @@ type NewUser struct {
 	Password string `json:"password"`
 }
 
+type Entity struct {
+	Emoji string `json:"emoji"`
+	Name  string `json:"name"`
+}
+
 func (u *NewUser) Encrypt() {
 	hashedPassword, err := util.HashPassword(u.Password)
 
