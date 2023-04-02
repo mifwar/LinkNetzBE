@@ -26,12 +26,19 @@ func InitRoutes() *fiber.App {
 	app.Use(middleware.VerifyUser)
 	app.Static("/uploads", "./uploads")
 	app.Get("/api/user", handler.User)
-	app.Post("/add/category", handler.Category)
-	app.Post("/add/tag", handler.Tag)
-	app.Post("/add/url", handler.Url)
 
-	app.Get("/categories", handler.Categories)
-	app.Get("/tags", handler.Tags)
+	app.Post("/category", handler.CreateCategory)
+	app.Post("/tag", handler.CreateTag)
+	app.Post("/url", handler.Url)
+
+	app.Put("/category/:id", handler.EditCategory)
+	app.Put("/tag/:id", handler.EditTag)
+
+	app.Get("/categories", handler.GetCategories)
+	app.Get("/tags", handler.GetTags)
+
+	app.Delete("/category/:id", handler.DeleteCategory)
+	app.Delete("/tag/:id", handler.DeleteTag)
 
 	return app
 }
