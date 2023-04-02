@@ -37,8 +37,30 @@ func init() {
 	}
 }
 
+func DeleteTags(userID int) error {
+	sqlStatement := "DELETE FROM tags where id = $1"
+	_, err := db.Exec(sqlStatement, userID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func EditTags(newTags models.Entity) error {
+	sqlStatement := "UPDATE tags SET name = $1, emoji = $2 WHERE id = $3"
+	_, err := db.Exec(sqlStatement, newTags.Name, newTags.Emoji, newTags.ID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetTags(userID float64) []models.Entity {
-	sqlStatement := "SELECT name, emoji FROM tags WHERE user_id = $1"
+	sqlStatement := "SELECT id, name, emoji FROM tags WHERE user_id = $1 ORDER BY create_date ASC"
 	rows, err := db.Query(sqlStatement, userID)
 	if err != nil {
 		log.Fatal(err)
@@ -49,7 +71,7 @@ func GetTags(userID float64) []models.Entity {
 
 	for rows.Next() {
 		var tag models.Entity
-		err := rows.Scan(&tag.Name, &tag.Emoji)
+		err := rows.Scan(&tag.ID, &tag.Name, &tag.Emoji)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -70,8 +92,30 @@ func CreateTag(newTags models.Entity, userID float64) error {
 	return nil
 }
 
+func DeleteCategory(userID int) error {
+	sqlStatement := "DELETE FROM categories where id = $1"
+	_, err := db.Exec(sqlStatement, userID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func EditCategory(newCategory models.Entity) error {
+	sqlStatement := "UPDATE categories SET name = $1, emoji = $2 WHERE id = $3"
+	_, err := db.Exec(sqlStatement, newCategory.Name, newCategory.Emoji, newCategory.ID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetCategories(userID float64) []models.Entity {
-	sqlStatement := "SELECT name, emoji FROM categories WHERE user_id = $1"
+	sqlStatement := "SELECT id, name, emoji FROM categories WHERE user_id = $1 ORDER BY create_date ASC"
 	rows, err := db.Query(sqlStatement, userID)
 	if err != nil {
 		log.Fatal(err)
@@ -82,10 +126,11 @@ func GetCategories(userID float64) []models.Entity {
 
 	for rows.Next() {
 		var category models.Entity
-		err := rows.Scan(&category.Name, &category.Emoji)
+		err := rows.Scan(&category.ID, &category.Name, &category.Emoji)
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		categories = append(categories, category)
 	}
 
