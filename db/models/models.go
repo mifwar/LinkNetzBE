@@ -18,6 +18,7 @@ type NewUser struct {
 }
 
 type Entity struct {
+	ID    int    `json:"id"`
 	Emoji string `json:"emoji"`
 	Name  string `json:"name"`
 }
