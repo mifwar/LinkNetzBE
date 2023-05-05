@@ -1,2 +1,2 @@
 # LinkSavvyBE
-a back end code of LinkSavvy. Written in Go
+a back end code of LinkNetz. Written in Go Fiber
